@@ -1,0 +1,120 @@
+import random
+import flake8
+import re
+
+class Tournoi():
+    def __init__(self):
+        self.nom = ""
+        self.lieu = ""
+        self.date = ""
+        self.tours = 4
+        self.turn = 1
+        self.list_turn = []
+        self.participants = []
+        self.time = ["bullet","blitz","coup rapide"]
+        self.description = ""
+
+class Joueur:
+    def __init__(self,name,family_name,rank):
+        self.name = name
+        self.family_name = family_name
+        self.birthday = ""
+        self.sexe = ["Homme","Femme","Non-communiqué"]
+        self.rank = rank
+        self.point = 0
+
+# Regex qui trouve les noms/prénoms
+caps = re.compile(r"[A-Z][a-z]+")
+# liste de prénoms
+noms = """AdamAlexAlexandreAlexisAnthonyAntoineBenjaminCédricCharlesChristopherDavidDylanÉdouardElliotÉmileÉtienneFélixGabrielGuillaumeHugoIsaacJacobJérémyJonathanJulienJustinLéoLoganLoïcLouisLucasLudovicMalikMathieuMathisMaximeMichaëlNathanNicolasNoahOlivierPhilippeRaphaëlSamuelSimonThomasTommyTristanVictorVincent"""
+found_names = caps.findall(noms)
+# liste de noms de familles
+nom_de_famille ="""Martin 228 857Bernard 120 573Thomas 108 141Petit 105 463Robert 102 950Richard 99 920Durand 99 614Dubois 98 951Moreau 94 261Laurent 88 803Simon 87 941Michel 85 489Lefebvre 82 522Leroy 79 204Roux 69 685David 69 212Bertrand 66 763Morel 66 417Fournier 65 758Girard 64 031Bonnet 63 085Dupont 63 035Lambert 63 026Fontaine 62 869Rousseau 62 193Vincent 60 751Muller 58 811Lefevre 58 158Faure 58 097Andre 57 349Mercier 57 294Blanc 57 127Guerin 56 839Boyer 56 246Garnier 56 244Chevalier 54 468Francois 54 107Legrand 53 523Gauthier 53 168Garcia 52 739Perrin 51 818Robin 51 038Clement 50 448Morin 49 974Nicolas 49 022Henry 48 972Roussel 48 889Mathieu 48 764Gautier 48 304Masson 48 076"""
+found_fnames = caps.findall(nom_de_famille)
+
+# Création du nombre de joueurs à partir des noms et prénoms, attribués aléatoirement ainsi qu'un classement de base.
+joueurs = []
+nb_joueurs = 8
+while len(joueurs) <= nb_joueurs -1:
+    joueurs.append(Joueur(random.choice(found_names),random.choice(found_fnames),random.randint(800,1500)))
+
+def main():
+    # 1. Créer un nouveau tournoi.
+    tournoi = Tournoi()
+    # 2. Ajouter huit joueurs.
+    for player in joueurs:
+        tournoi.participants.append(player)
+    while tournoi.turn <= tournoi.tours:
+        # 3. L'ordinateur génère des paires de joueurs pour le premier tour.
+        pairs = pair(tournoi)
+        # heures de début et de fin aléatoires(restreintes à l'après-midi)
+        début = [random.randint(12,19),random.randint(0,59)]
+        fin = [début[0] + random.randint(1,3),random.randint(0,59)]
+        Tour = tour(tournoi,pairs,"Round {}".format(tournoi.turn),"{}h{}".format(début[0],début[1]),"{}h{}".format(fin[0],fin[1]))
+        tournoi.list_turn.append(Tour)
+        # 4. Lorsque le tour est terminé, entrez les résultats.
+        resultat(pairs)
+        tournoi.turn += 1
+
+    # 5. Répétez les étapes 3 et 4 pour les tours suivants jusqu'à ce que tous les tours soient joués, et que le tournoi soit terminé.
+
+def tour(tournoi,pair,nom,date_heure_début,date_heure_fin):
+    stats = [tournoi,pair,nom,date_heure_début,date_heure_fin]
+
+    return stats
+
+def pair(tournoi):
+    pool = joueurs
+    pairs = []
+
+    if tournoi.turn == 1:
+    # Trie à partir du rang des joueurs
+        sorted_list = sorted(pool,key = lambda joueur: joueur.rank,reverse=True)
+    # Trie à partir de leurs points
+    else:
+        sorted_list = sorted(pool,key = lambda joueur: (joueur.point,joueur.rank),reverse=True)
+        
+    # for round in tournoi.list_turn:
+    #     for pair in round[1]:
+    #         players = pair[1]
+    #         print(players)
+
+    # modulable pour plus de joueurs
+    top_tier = sorted_list[0:int(len(sorted_list)/2)]
+    low_tier = sorted_list[len(top_tier):len(sorted_list)+1]
+    
+    # attribution d'une paire en fonction de leur classement et de leurs résultats (en ronde suisse)
+    index = 0
+    while len(pairs) <= len(sorted_list)/2-1:
+        pick = top_tier[index]
+        pick2 = low_tier[index]
+        pairs.append([(pick,pick2),[]])
+        index += 1
+
+    return pairs
+
+def resultat(pairs):
+    match = 1
+    for pair in pairs:
+        p1 = pair[0][0]
+        p2 = pair[0][1]
+        print("MATCH {} : {} VS {}".format(match,p1.name,p2.name))
+        outcome = [1,0,1/2]
+        result = random.choice(outcome)
+        if result == 1 or result == 0:
+            winner = random.choice((p1,p2))
+            winner.point += 1
+            pair[1] = winner
+            print("{} remporte le match !".format(winner.name))
+        else:
+            print("Match nul !")
+            p1.point += result
+            p2.point += result
+            pair[1] = "Match nul"
+
+        match += 1
+
+    return tuple(pair)
+                                                                                       
+if __name__ == '__main__':
+    main()
