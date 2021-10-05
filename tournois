@@ -4,30 +4,31 @@ from tinydb import TinyDB
 
 db = TinyDB("db.json")
 
+
 class Tournoi:
-    def __init__(self,nom):
+    def __init__(self, nom):
         self.nom = nom
         self.lieu = "Orléans"
         self.date = f"{random.randint(1,31)}/{random.randint(1,12)}"
         self.tours = 4
         self.tournee = []
         self.participants = []
-        self.time = []
+        self.time = random.choice(["bullet", "blitz", "coup rapide"])
         self.description = "Description"
 
 
 class Joueur:
-    def __init__(self,nom,family_name,rank):
+    def __init__(self, nom, family_name, rank):
         self.nom = nom
         self.family_name = family_name
         self.birthday = f"{random.randint(1,31)}/{random.randint(1,12)}/{random.randint(1950,2015)}"
-        self.sexe = random.choice(["Homme","Femme","Non-binaire"])
+        self.sexe = random.choice(["Homme", "Femme", "Non-binaire"])
         self.rank = rank
         self.point = 0
 
 
 class Tour:
-    def __init__(self,match,nom,date_heure_debut,date_heure_fin):
+    def __init__(self, match, nom, date_heure_debut, date_heure_fin):
         self.match = match
         self.nom = nom
         self.date_heure_debut = date_heure_debut
@@ -35,38 +36,59 @@ class Tour:
 
 
 class Match:
-    def __init__(self,n_match,joueur1,joueur2,winner):
+    def __init__(self, n_match, joueur1, joueur2, winner):
         self.joueur1 = joueur1
         self.joueur2 = joueur2
         self.n_match = f"Match {n_match}, {joueur1.nom} vs {joueur2.nom}"
         self.winner = winner
 
+
 def serializing_players(tournoi):
     liste__serialized_players = []
     for joueur in tournoi.participants:
         serialized_player = {
-            'nom' : joueur.nom,
-            "family_name" : joueur.family_name,
-            "birthday" : joueur.birthday,
-            "sexe" : joueur.sexe,
-            "rank" : joueur.rank,
-            "point" : joueur.point,
+            'nom': joueur.nom,
+            "family_name": joueur.family_name,
+            "birthday": joueur.birthday,
+            "sexe": joueur.sexe,
+            "rank": joueur.rank,
+            "point": joueur.point,
         }
         liste__serialized_players.append(serialized_player)
     return liste__serialized_players
 
-def serializing_tournois(tournoi):
-    serialized_tournoi = {
-        "nom" : tournoi.nom,
-        "lieu" : tournoi.lieu,
-        "date" : tournoi.date,
-        "tours" : tournoi.tours,
-        "tournee" : tournoi.tournee,
-        "participants" : tournoi.participants,
-        "time" : tournoi.time,
-        "description" : tournoi.description
-    }
-    return serialized_tournoi
+
+def serializing_tournois(liste_tournoi):
+    liste_serialized_tournoi = []
+    for tournoi in liste_tournoi:
+        serialized_tournoi = {
+        "nom": tournoi.nom,
+        "lieu": tournoi.lieu,
+        "date": tournoi.date,
+        "tours": tournoi.tours,
+        "tournee": tournoi.tournee,
+        "participants": tournoi.participants,
+        "time": tournoi.time,
+        "description": tournoi.description
+        }
+        liste_serialized_tournoi.append(serialized_tournoi)
+    return liste_serialized_tournoi
+
+
+def tiny_save(tournoi,liste_tournois):
+    # Sauvegarde des joueurs
+    tiny_players = serializing_players(tournoi)
+    players_table = db.table("players")
+    players_table.truncate()
+    players_table.insert_multiple(tiny_players)
+
+    # Sauvegarde des tournois
+    tiny_tournois = serializing_tournois(liste_tournois)
+    tournois_table = db.table("tournois")
+    tournois_table.truncate()
+    tournois_table.insert_multiple(tiny_tournois)
+
+    return players_table,tournois_table
 
 # Ajout du nombre de joueurs à partir des noms, prénoms et classement attribués aléatoirement.
 def auto_joueurs(nb_joueurs):
@@ -78,14 +100,16 @@ def auto_joueurs(nb_joueurs):
         prenom = j.prenom()
         joueur_list.append(
             Joueur(random.choice(prenom),
-            random.choice(nom),
-            random.randint(800,1500))
-            )
+                   random.choice(nom),
+                   random.randint(800, 1500))
+        )
     return joueur_list
 
 # Ajout manuel des joueurs
+
+
 def manuel_joueur(tournoi):
-    joueur = Joueur(input("prenom : "),input("nom : "),input("côte : "))
+    joueur = Joueur(input("prenom : "), input("nom : "), input("côte : "))
     tournoi.participants.append(joueur)
     retry = input("Ajouter d'autre joueurs? y/n :  ").lower()
     if retry == "y":
@@ -97,13 +121,16 @@ def manuel_joueur(tournoi):
 
 
 def menu():
-    # Plus tard: va chercher si un fichier est vide et extrait les données s'il y a des tournois dedans.
     tournois = []
 
-    # Permanent: 
+    # Permanent:
     running = True
-    while running == True:
-        print("\n Menu principal\n1: Créer un tournoi\n2: Regarder stats tournoi\n3: Sauvegarder/Charger\n4: Exit")
+    while running is True:
+        print("""\nMENU PRINCIPAL\n\n1: Créer un tournoi
+                \n2: Regarder stats tournoi
+                \n3: Sauvegarder/Charger
+                \n4: Exit
+                \n""")
         choix1 = int(input("Quel choix? : "))
 
         # Création tournois
@@ -114,63 +141,47 @@ def menu():
         # Récupération/affichage des stats
         elif choix1 == 2:
             if len(tournois) >= 1:
-                print("\n Quelles stats voulez-vous voir?\n1: Acteurs\n2: Tournois\n3: Joueurs\n4: Tours\n5: Matches\n6: Exit")
+                print(
+                    """ \n Quelles stats voulez-vous voir?\n1: Tournois
+                        \n2: Joueurs\n3: Tours\n4: Matches\n5: Exit """)
                 choix2 = int(input("Quel choix? : "))
-                if choix2 in range(3,6):
-                    print(tournois)
+                if choix2 in range(2, 5):
+                    for tournoi in tournois:
+                        print(f"Le tournoi '{tournoi.nom}' a l'index '{tournois.index(tournoi)}'")
                     choix_tournois = int(input("Pour quel tournois ?: "))
                     tournois_choisis = tournois[choix_tournois]
-
                 if choix2 == 1:
-                    rapport_acteurs()
-
-                elif choix2 == 2:
                     rapport_tournoi(tournois)
-
-                elif choix2 == 3:
+                elif choix2 == 2:
                     rapport_joueur(tournois_choisis)
-                
-                elif choix2 == 4:
+                elif choix2 == 3:
                     rapport_tours(tournois_choisis)
-
-                elif choix2 == 5:
+                elif choix2 == 4:
                     rapport_match(tournois_choisis)
-
-                elif choix2 == 6:
-                    print("Goodbye ! ")
-                    running = False
+                elif choix2 == 5:
+                    pass
+                else:
+                    print("Faites un choix valide! (1 à 5)")
             else:
                 print("Il n'y a pas encore de tournoi !!")
-        
         elif choix1 == 3:
-            choix2 = input("1 : Sauvegarder\n2 : Charger ")
+            choix2 = int(input("1 : Sauvegarder\n2 : Charger "))
             if choix2 == 1:
                 for tournoi in tournois:
-                    # Sauvegarde des joueurs
-                    players = serializing_players(tournoi)
-                    players_table = db.table(f"players, {tournoi.nom}")
-                    players_table.truncate()
-                    players_table.insert_multiple(players)
-                    # Sauvegarde des tournois
-                    tournois = serializing_tournois(tournoi)
-                    tournois_table = db.table("tournois")
-                    tournois_table.truncate()
-                    tournois_table.insert_multiple(tournoi)
+                    sauvegarde = tiny_save(tournoi,tournois)
+                    sauvegarde_joueur = sauvegarde[0]
+                    sauvegarde_tournois = sauvegarde[1]
+                    
             # Chargement des joueurs et tournois
             elif choix2 == 2:
-                saved_players = players_table.all()
-                saved_tournois = tournois_table.all()
-                print(saved_players)
-                print(saved_tournois)
+                sauvegarde_joueur.all()
+                sauvegarde_tournois.all()
+
 
         # Fermeture de l'application
         elif choix1 == 4:
             print("Goodbye ! ")
             running = False
-
-
-def rapport_acteurs():
-    print("?")
 
 
 def rapport_tournoi(liste_tournois):
@@ -191,57 +202,63 @@ def rapport_match(tournoi):
                 print("Egalité !")
             else:
                 print(f"{match.winner.nom} gagne !")
-                
+
 
 def rapport_joueur(tournoi):
     joueurs = tournoi.participants
-    sorted_joueurs = sorted(joueurs,key = lambda joueur: (joueur.nom,joueur.rank))
+    sorted_joueurs = sorted(joueurs, key=lambda joueur: (joueur.nom, joueur.rank))
     for player in sorted_joueurs:
-        print(player,player.nom,player.rank)
+        print(player, player.nom, player.rank)
 
 
-def pair(pool,numero_tour):
+def pair(pool, numero_tour, tournoi):
     # Trie à partir du rang des joueurs
     pairs = []
     if numero_tour == 1:
-        sorted_list = sorted(pool,key = lambda joueur: joueur.rank,reverse=True)
+        sorted_list = sorted(pool, key=lambda joueur: joueur.rank, reverse=True)
         # modulable pour plus de joueurs
         top_tier = sorted_list[0:int(len(sorted_list)/2)]
         low_tier = sorted_list[len(top_tier):len(sorted_list)+1]
         # attribution d'une paire en fonction de leur classement et de leurs résultats (en ronde suisse)
         index = 0
-        for pair in range(len(top_tier)) :
+        for pair in range(len(top_tier)):
             pick = top_tier[index]
             pick2 = low_tier[index]
-            pairs.append([[pick,pick2],[]])
+            pairs.append([[pick, pick2], []])
             if index <= len(top_tier):
                 index += 1
 
-    # Trie à partir de leurs points
+    # Trie à partir de leurs points après le 2ème tour
     else:
-        sorted_list = sorted(pool,key = lambda joueur: (joueur.point,joueur.rank),reverse=True)
-        for index in range(len(sorted_list)):
-            if index <= len(sorted_list)-2:
-                pick = sorted_list[index]
-                pick2 = sorted_list[index+1]
-                # for Tour in tournoi.tournee:
-                #     if pick in Tour.match[0][0] and pick2 in Tour.match[0][0]:
-                #         pick2 = sorted_list[index+2]
-                pairs.append([[pick,pick2],[]])
+        sorted_list = sorted(pool, key=lambda joueur: (joueur.point, joueur.rank), reverse=True)
+        for index_n in range(len(sorted_list)):
+            if index_n <= len(sorted_list)-2:
+                pick = sorted_list[index_n]
+                pick2 = sorted_list[index_n+1]
+                for tours in tournoi.tournee:
+                    for match in tours.match:
+                        joueurs = [match.joueur1, match.joueur2]
+                        if pick in joueurs and pick2 in joueurs:
+                            if len(sorted_list) == 2:
+                                pick2 = sorted_list[index_n+1]
+
+                pairs.append([[pick, pick2], []])
                 sorted_list.remove(pick)
                 sorted_list.remove(pick2)
 
     return pairs
 
 # Détermine un gagnant ou une égalité lors d'un match
+
+
 def resultat(pairs):
     for pair in pairs:
         p1 = pair[0][0]
         p2 = pair[0][1]
-        outcome = [1,0,1/2]
+        outcome = [1, 0, 1/2]
         result = random.choice(outcome)
         if result == 1 or result == 0:
-            winner = random.choice((p1,p2))
+            winner = random.choice((p1, p2))
             winner.point += 1
             pair[1] = winner
         else:
@@ -255,7 +272,7 @@ def resultat(pairs):
 def create_new_tournament():
     # 1. Créer un nouveau tournoi.
     tournoi = Tournoi(input("Nom du tournois : "))
-    
+
     # Ajout manuel?
     manuel = input("Ajouter manuellement? y/n : ")
     if manuel == "y":
@@ -269,32 +286,32 @@ def create_new_tournament():
         create_new_tournament()
 
     # 3. L'ordinateur génère des paires de joueurs pour le premier tour.
-    for numero_tour in range(1,tournoi.tours + 1) :
-        pairs = pair(tournoi.participants,numero_tour)
+    for numero_tour in range(1, tournoi.tours + 1):
+        pairs = pair(tournoi.participants, numero_tour, tournoi)
         # heure de debut et fin aléatoire
-        debut = [random.randint(12,19),random.randint(0,59)]
-        fin = [debut[0] + random.randint(1,3),random.randint(0,59)]
+        debut = [random.randint(12, 19), random.randint(0, 59)]
+        fin = [debut[0] + random.randint(1, 3), random.randint(0, 59)]
         # Résultats de chaque matches
         final_pairs = resultat(pairs)
         # Transformation des matchs en Match
         matches = []
         n_match = 1
         for match in final_pairs:
-            match_final = Match(n_match,match[0][0],match[0][1],match[1])
+            match_final = Match(n_match, match[0][0], match[0][1], match[1])
             matches.append(match_final)
             n_match += 1
         tour = Tour(
             matches,
             "Round {}".format(numero_tour),
-            "{}h{}".format(debut[0],debut[1]),
-            "{}h{}".format(fin[0],fin[1])
-            )
+            "{}h{}".format(debut[0], debut[1]),
+            "{}h{}".format(fin[0], fin[1])
+        )
 
         # 4. Lorsque le tour est terminé j'enregistre le tour dans le tournoi
         tournoi.tournee.append(tour)
-            
-    # 5. Répétez les étapes 3 et 4 pour les tours suivants jusqu'à ce que tous les tours soient joués, et que le tournoi soit terminé.
+
     return tournoi
-                                                               
+
+
 if __name__ == '__main__':
     menu()
