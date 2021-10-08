@@ -1,9 +1,9 @@
 import random
 import joueurs as j
-from tinydb import TinyDB
+import json
+from tinydb import TinyDB,Query
 
 db = TinyDB("db.json")
-
 
 class Tournoi:
     def __init__(self, nom):
@@ -66,13 +66,92 @@ def serializing_tournois(liste_tournoi):
         "lieu": tournoi.lieu,
         "date": tournoi.date,
         "tours": tournoi.tours,
-        "tournee": tournoi.tournee,
-        "participants": tournoi.participants,
+        "tournee": [serializing_tour(t) for t in tournoi.tournee],
+        "participants": [json.dumps(p.__dict__) for p in tournoi.participants],
         "time": tournoi.time,
         "description": tournoi.description
         }
         liste_serialized_tournoi.append(serialized_tournoi)
     return liste_serialized_tournoi
+
+
+def serializing_tour(tour):
+    serialized_tour = {
+    "match" : [serializing_match(m) for m in tour.match],
+    "nom" : tour.nom,
+    "date_heure_debut" : tour.date_heure_debut,
+    "date_heure_fin" : tour.date_heure_fin,
+    }
+    return serialized_tour
+
+
+def serializing_match(match):
+    serialized_match ={
+        "joueur1" : json.dumps(match.joueur1, default = lambda o: o.__dict__),
+        "joueur2" : json.dumps(match.joueur2, default = lambda o: o.__dict__),
+        "n_match" : f"Match {match.n_match}, {match.joueur1.nom} vs {match.joueur2.nom}",
+    }
+    if type(match.winner) is str:
+        serialized_match["winner"] = match.winner
+    else:
+        serialized_match["winner"] = json.dumps(match.winner, default = lambda o: o.__dict__)
+
+    return serialized_match
+
+
+def deserializing_joueur(joueur):
+    
+    dz_player = Joueur(
+        nom = joueur["nom"],
+        family_name = joueur["family_name"],
+        rank = joueur["rank"],
+    )
+    dz_player.sexe = joueur["sexe"]
+    dz_player.birthday = joueur["birthday"]
+    dz_player.point = joueur["point"]
+
+    return dz_player
+
+def deserializing_tournoi(tournoi):
+    dz_tournoi = Tournoi(tournoi["nom"])
+    dz_tournoi.lieu = tournoi["lieu"]
+    dz_tournoi.date = tournoi["date"]
+    dz_tournoi.tours = tournoi["tours"]
+    dz_tournoi.tournee = deserializing_tour(tournoi["tournee"])
+    dz_tournoi.participants = deserializing_joueur(tournoi["participants"])
+    dz_tournoi.description = tournoi["description"]
+
+    pass
+
+
+def deserializing_match(liste_match):
+    liste_dz_match = []
+    for match in liste_match:
+        d_match = Match(
+            deserializing_joueur(match["joueur1"]),
+            deserializing_joueur(match["joueur2"]),
+            match["n_match"],
+            match["winner"]
+        )
+        if match["winner"] == "EGALITE":
+            pass
+        else:
+            d_match.winner = deserializing_joueur(match["winner"])
+    return liste_dz_match
+
+
+def deserializing_tour(liste_tour):
+    liste_dz_tour = []
+    for tour in liste_tour:
+        d_tour = Tour(
+            deserializing_match(tour["match"]),
+            tour["nom"],
+            tour["date_heure_debut"],
+            tour["date_heure_fin"]
+        )
+        liste_dz_tour.append(d_tour)
+
+    return liste_dz_tour
 
 
 def tiny_save(tournoi,liste_tournois):
@@ -89,6 +168,7 @@ def tiny_save(tournoi,liste_tournois):
     tournois_table.insert_multiple(tiny_tournois)
 
     return players_table,tournois_table
+
 
 # Ajout du nombre de joueurs à partir des noms, prénoms et classement attribués aléatoirement.
 def auto_joueurs(nb_joueurs):
@@ -167,15 +247,18 @@ def menu():
         elif choix1 == 3:
             choix2 = int(input("1 : Sauvegarder\n2 : Charger "))
             if choix2 == 1:
+                # Sauvegarde dans le db.json
                 for tournoi in tournois:
-                    sauvegarde = tiny_save(tournoi,tournois)
-                    sauvegarde_joueur = sauvegarde[0]
-                    sauvegarde_tournois = sauvegarde[1]
+                    tiny_save(tournoi,tournois)
                     
             # Chargement des joueurs et tournois
             elif choix2 == 2:
-                sauvegarde_joueur.all()
-                sauvegarde_tournois.all()
+                tournoi = db.table("tournois").all()
+                for player in db.table("players"):
+                    dz_player = deserializing_joueur(player)
+                    pass
+                for tournoi in db.table("tournois"):
+                    dz_tournoi = deserializing_tournoi(tournoi)
 
 
         # Fermeture de l'application
