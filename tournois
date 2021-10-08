@@ -185,9 +185,8 @@ def auto_joueurs(nb_joueurs):
         )
     return joueur_list
 
+
 # Ajout manuel des joueurs
-
-
 def manuel_joueur(tournoi):
     joueur = Joueur(input("prenom : "), input("nom : "), input("côte : "))
     tournoi.participants.append(joueur)
