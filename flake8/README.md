@@ -1,1 +1,2 @@
-# Rapports flake 8
+# Rapports flake8
+Ce dossier regroupe les rapports flake8-html sans erreur, comme spécifié pour le projet
