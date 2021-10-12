@@ -10,7 +10,7 @@ db = TinyDB("db.json")
 class Tournoi:
     def __init__(self, nom):
         self.nom = nom
-        self.lieu = "Orléans"
+        self.lieu = ""
         self.date = f"{random.randint(1,31)}/{random.randint(1,12)}"
         self.tours = 4
         self.tournee = []
@@ -45,21 +45,7 @@ class Match:
         self.winner = winner
 
 
-def serializing_players(tournoi):
-    liste__serialized_players = []
-    for joueur in tournoi.participants:
-        serialized_player = {
-            'nom': joueur.nom,
-            "family_name": joueur.family_name,
-            "birthday": joueur.birthday,
-            "sexe": joueur.sexe,
-            "rank": joueur.rank,
-            "point": joueur.point,
-        }
-        liste__serialized_players.append(serialized_player)
-    return liste__serialized_players
-
-
+# Conversions pour tinydb
 def serializing_tournois(liste_tournoi):
     liste_serialized_tournoi = []
     for tournoi in liste_tournoi:
@@ -101,20 +87,22 @@ def serializing_match(match):
     return serialized_match
 
 
-def deserializing_joueur(joueur):
-    dz_player = Joueur(
-                nom=joueur["nom"],
-                family_name=joueur["family_name"],
-                rank=joueur["rank"],
-                )
-    dz_player.sexe = joueur["sexe"]
-    dz_player.birthday = joueur["birthday"]
+def serializing_players(tournoi):
+    liste__serialized_players = []
+    for joueur in tournoi.participants:
+        serialized_player = {
+            'nom': joueur.nom,
+            "family_name": joueur.family_name,
+            "birthday": joueur.birthday,
+            "sexe": joueur.sexe,
+            "rank": joueur.rank,
+            "point": joueur.point,
+        }
+        liste__serialized_players.append(serialized_player)
+    return liste__serialized_players
 
-    dz_player.point = joueur["point"]
 
-    return dz_player
-
-
+# Conversions depuis la sauvegarde tinydb
 def deserializing_tournoi(tournoi):
     dz_tournoi = Tournoi(tournoi["nom"])
     dz_tournoi.lieu = tournoi["lieu"]
@@ -124,6 +112,20 @@ def deserializing_tournoi(tournoi):
     dz_tournoi.participants = [deserializing_joueur(joueur) for joueur in tournoi["participants"]]
     dz_tournoi.description = tournoi["description"]
     return dz_tournoi
+
+
+def deserializing_tour(liste_tour):
+    liste_dz_tour = []
+    for tour in liste_tour:
+        d_tour = Tour(
+            deserializing_match(tour["match"]),
+            tour["nom"],
+            tour["date_heure_debut"],
+            tour["date_heure_fin"]
+        )
+        liste_dz_tour.append(d_tour)
+
+    return liste_dz_tour
 
 
 def deserializing_match(liste_match):
@@ -144,18 +146,18 @@ def deserializing_match(liste_match):
     return liste_dz_match
 
 
-def deserializing_tour(liste_tour):
-    liste_dz_tour = []
-    for tour in liste_tour:
-        d_tour = Tour(
-            deserializing_match(tour["match"]),
-            tour["nom"],
-            tour["date_heure_debut"],
-            tour["date_heure_fin"]
-        )
-        liste_dz_tour.append(d_tour)
+def deserializing_joueur(joueur):
+    dz_player = Joueur(
+                nom=joueur["nom"],
+                family_name=joueur["family_name"],
+                rank=joueur["rank"],
+                )
+    dz_player.sexe = joueur["sexe"]
+    dz_player.birthday = joueur["birthday"]
 
-    return liste_dz_tour
+    dz_player.point = joueur["point"]
+
+    return dz_player
 
 
 def tiny_save(tournoi, liste_tournois):
@@ -189,9 +191,8 @@ def auto_joueurs(nb_joueurs):
         )
     return joueur_list
 
+
 # Ajout manuel des joueurs
-
-
 def manuel_joueur(tournoi):
     joueur = Joueur(input("prenom: "), input("nom: "), input("côte: "))
     tournoi.participants.append(joueur)
@@ -206,8 +207,6 @@ def manuel_joueur(tournoi):
 
 def menu():
     tournois = []
-
-    # Permanent:
     running = True
     while running is True:
         print("""\nMENU PRINCIPAL\n\n1: Créer un tournoi
@@ -228,7 +227,7 @@ def menu():
                 print(
                     """ \n Quelles stats voulez-vous voir?\n1: Tournois
                         \n2: Joueurs\n3: Tours\n4: Matches\n5: Exit """)
-                choix2 = int(input("Quel choix?: "))
+                choix2 = int(input("Quel est votre choix?: "))
                 if choix2 in range(2, 5):
                     for tournoi in tournois:
                         print(f"Le tournoi '{tournoi.nom}' a l'index '{tournois.index(tournoi)}'")
@@ -249,7 +248,7 @@ def menu():
             else:
                 print("\nIl n'y a pas encore de tournoi !!")
         elif choix1 == 3:
-            choix2 = int(input("1: Sauvegarder\n2: Charger\n3: Retour \nVotre choix:  "))
+            choix2 = int(input("1: Sauvegarder\n2: Charger\n3: Retour \nQuel est votre choix?: "))
             if choix2 == 1:
                 # Sauvegarde dans le db.json
                 for tournoi in tournois:
@@ -363,14 +362,14 @@ def create_new_tournament():
     if manuel == "y":
         manuel_joueur(tournoi)
     elif manuel == "n":
-        # 2. Ajouter huit joueurs.
+        # 2. Ajouter x joueurs.
         joueur = auto_joueurs(int(input("Nombre de joueurs: ")))
         for player in joueur:
             tournoi.participants.append(player)
     else:
         create_new_tournament()
 
-    # 3. L'ordinateur génère des paires de joueurs pour le premier tour.
+    # 3. L'ordinateur génère les paires de joueurs.
     for numero_tour in range(1, tournoi.tours + 1):
         pairs = pair(tournoi.participants, numero_tour, tournoi)
         # heure de debut et fin aléatoire
@@ -378,7 +377,7 @@ def create_new_tournament():
         fin = [debut[0] + random.randint(1, 3), random.randint(0, 59)]
         # Résultats de chaque matches
         final_pairs = resultat(pairs)
-        # Transformation des matchs en Match
+        # Transformation des pairs en Match
         matches = []
         n_match = 1
         for match in final_pairs:
