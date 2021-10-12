@@ -34,7 +34,7 @@ pip install flake8-html
 ```shell
 flake8 .\main.py .\joueurs.py --format=html --htmldir=flake-report --max-line-length 119
 ```
-<br/> Dans mon cas le rapport est exampt d'erreurs !
+<br/> Dans mon cas le rapport est exempt d'erreurs !
 ![rapport-flake8](https://puu.sh/IhNgi/4d0227c665.png)
 
 ## Requirements
