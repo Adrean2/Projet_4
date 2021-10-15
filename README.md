@@ -38,6 +38,6 @@ flake8 .\main.py .\joueurs.py --format=html --htmldir=flake-report --max-line-le
 ![rapport-flake8](https://puu.sh/IhNgi/4d0227c665.png)
 
 ## Requirements
-tinydb version 4.5.2 https://tinydb.readthedocs.io/
-flake8 version 3.9.2 https://flake8.pycqa.org/
-flake8-html version 0.4.1 https://pypi.org/project/flake8-html/
+<br/>tinydb version 4.5.2 https://tinydb.readthedocs.io/
+<br/>flake8 version 3.9.2 https://flake8.pycqa.org/
+<br/>flake8-html version 0.4.1 https://pypi.org/project/flake8-html/
