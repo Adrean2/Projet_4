@@ -2,6 +2,7 @@ import random
 import models
 import joueurs as j
 
+
 # Ajout du nombre de joueurs à partir des noms, prénoms et classement attribués aléatoirement.
 def auto_joueurs(nb_joueurs):
     joueur_list = []
@@ -10,11 +11,8 @@ def auto_joueurs(nb_joueurs):
         nom = j.nom()
         # Liste de 100 prénom
         prenom = j.prenom()
-        joueur_list.append(
-            models.Joueur(random.choice(prenom),
-                   random.choice(nom),
-                   random.randint(800, 1500))
-        )
+        joueur_list.append(models.Joueur(random.choice(prenom), random.choice(nom), random.randint(800, 1500)))
+
     return joueur_list
 
 
@@ -24,14 +22,17 @@ def manuel_joueur(tournoi):
     tournoi.participants.append(joueur)
     retry = input("Ajouter d'autre joueurs? y/n:  ").lower()
     if retry == "y":
-        manuel_joueur(tournoi)
+        manuel_auto = int(input("manuel(écrire 0) ou auto(écrire 1)? : "))
+        if manuel_auto == 0:
+            manuel_joueur(tournoi)
+        elif manuel_auto == 1:
+            auto_joueurs(int(input("Combien de joueurs? : ")))
+        else:
+            print("Choisissez 0 ou 1 !")
     elif retry == "n":
         pass
     else:
         print("répondez y/n")
-
-
-    tournois = []
 
 
 # Création des pairs
