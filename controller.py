@@ -1,10 +1,11 @@
 import models
 import vue
 
+
 def menu():
+    tournois = []
     running = True
     while running is True:
-        tournois = []
         print("""\nMENU PRINCIPAL\n\n1: Créer un tournoi
                 \n2: Regarder stats tournoi
                 \n3: Sauvegarder/Charger
