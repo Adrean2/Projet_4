@@ -41,6 +41,7 @@ class Match:
         self.joueur2 = joueur2
         self.winner = winner
 
+
 # Création base de donnée tinydb
 db = TinyDB("db.json")
 
@@ -174,4 +175,3 @@ def tiny_save(tournoi, liste_tournois):
     tournois_table.insert_multiple(tiny_tournois)
 
     return players_table, tournois_table
-
