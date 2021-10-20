@@ -18,7 +18,7 @@ def auto_joueurs(nb_joueurs):
 
 # Ajout manuel des joueurs
 def manuel_joueur(tournoi):
-    joueur = models.Joueur(input("prenom: "), input("nom: "), input("côte: "))
+    joueur = models.Joueur(input("prenom: "), input("nom: "), int(input("côte: ")))
     tournoi.participants.append(joueur)
     retry = input("Ajouter d'autre joueurs? y/n:  ").lower()
     if retry == "y":
@@ -26,7 +26,9 @@ def manuel_joueur(tournoi):
         if manuel_auto == 0:
             manuel_joueur(tournoi)
         elif manuel_auto == 1:
-            auto_joueurs(int(input("Combien de joueurs? : ")))
+            players = auto_joueurs(int(input("Combien de joueurs? : ")))
+            for joueurs in players:
+                tournoi.participants.append(joueurs)
         else:
             print("Choisissez 0 ou 1 !")
     elif retry == "n":
@@ -127,7 +129,7 @@ def create_new_tournament():
     # 1. Créer un nouveau tournoi.
     tournoi = models.Tournoi(input("Nom du tournois: "))
 
-    # Ajout manuel?
+    # Ajout manuel
     manuel = input("Ajouter manuellement? y/n: ")
     if manuel == "y":
         manuel_joueur(tournoi)
