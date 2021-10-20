@@ -1,5 +1,6 @@
 import models
 import vue
+import random
 
 
 def menu():
@@ -64,6 +65,65 @@ def menu():
             running = False
         else:
             print("Faites un choix valide! (1 à 4)")
+
+
+# Création des pairs
+def pair(pool, numero_tour, tournoi):
+    # Trie à partir du rang des joueurs
+    pairs = []
+    if numero_tour == 1:
+        sorted_list = sorted(pool, key=lambda joueur: joueur.rank, reverse=True)
+        # modulable pour plus de joueurs
+        top_tier = sorted_list[0:int(len(sorted_list)/2)]
+        low_tier = sorted_list[len(top_tier):len(sorted_list)+1]
+        # attribution d'une paire en fonction de leur classement et de leurs résultats (en ronde suisse)
+        index = 0
+        for pair in range(len(top_tier)):
+            pick = top_tier[index]
+            pick2 = low_tier[index]
+            pairs.append([[pick, pick2], []])
+            if index <= len(top_tier):
+                index += 1
+
+    # Trie à partir de leurs points après le 2ème tour
+    else:
+        sorted_list = sorted(pool, key=lambda joueur: (joueur.point, joueur.rank), reverse=True)
+        for index_n in range(int(len(sorted_list)/2)):
+            faced_before = False
+            pick = sorted_list[0]
+            pick2 = sorted_list[1]
+            # Vérification si les joueurs se sont déjà affrontés
+            for tours in tournoi.tournee:
+                for match in tours.match:
+                    joueurs = [match.joueur1, match.joueur2]
+                    if pick in joueurs and pick2 in joueurs:
+                        if len(sorted_list) >= 3:
+                            faced_before = True
+            if faced_before is True and len(sorted_list) > 2:
+                pick2 = sorted_list[2]
+            pairs.append([[pick, pick2], []])
+            sorted_list.remove(pick)
+            sorted_list.remove(pick2)
+
+    return pairs
+
+# Détermine un gagnant ou une égalité lors d'un match
+def resultat(pairs):
+    for pair in pairs:
+        p1 = pair[0][0]
+        p2 = pair[0][1]
+        outcome = [1, 0, 1/2]
+        result = random.choice(outcome)
+        if result == 1 or result == 0:
+            winner = random.choice((p1, p2))
+            winner.point += 1
+            pair[1] = winner
+        else:
+            p1.point += result
+            p2.point += result
+            pair[1] = "EGALITE"
+
+    return tuple(pairs)
 
 
 if __name__ == '__main__':
