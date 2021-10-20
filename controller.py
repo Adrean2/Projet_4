@@ -6,7 +6,8 @@ def menu():
     tournois = []
     running = True
     while running is True:
-        print("""\nMENU PRINCIPAL\n\n1: Créer un tournoi
+        print("""\nMENU PRINCIPAL\n
+                \n1: Créer un tournoi
                 \n2: Regarder stats tournoi
                 \n3: Sauvegarder/Charger
                 \n4: Exit
@@ -61,6 +62,8 @@ def menu():
         elif choix1 == 4:
             print("Goodbye ! ")
             running = False
+        else:
+            print("Faites un choix valide! (1 à 4)")
 
 
 if __name__ == '__main__':
